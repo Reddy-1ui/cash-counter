@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cash Counter — Multi-shop Collection</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #2B1420;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #FBEFD9;
+    font-size: 16px;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 16px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  header .eyebrow {
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #F0B93A;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 38px;
+    margin: 0;
+    color: #FFF7E6;
+  }
+
+  header p {
+    color: #E7C9D2;
+    font-size: 17px;
+    margin-top: 10px;
+  }
+
+  .grand-card {
+    background: #421F30;
+    border: 1px solid #6B3450;
+    border-radius: 14px;
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .grand-card .count-summary {
+    font-size: 15px;
+    color: #E7C9D2;
+  }
+  .grand-card .count-summary strong {
+    display: block;
+    color: #FFF7E6;
+    font-size: 19px;
+  }
+
+  .grand-total { text-align: right; }
+  .grand-total .gt-label {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #F0B93A;
+    font-weight: 700;
+  }
+  .grand-total .gt-amount {
+    font-family: Georgia, serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #FFF7E6;
+  }
+
+  .shop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .shop-card {
+    background: #FBF3E3;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  }
+
+  .shop-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #F0E1BE;
+    border-bottom: 1px solid #E0CC9C;
+  }
+
+  .shop-head input[type="text"] {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 10px 12px;
+    border: 1px solid #D6C39A;
+    border-radius: 8px;
+    background: #FFFDF7;
+    color: #241812;
+  }
+  .shop-head input[type="text"]:focus {
+    outline: none;
+    border-color: #B8901E;
+    box-shadow: 0 0 0 2px rgba(184,144,30,0.3);
+  }
+
+  .shop-subtotal {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 18px;
+    color: #241812;
+    white-space: nowrap;
+  }
+
+  .remove-shop {
+    border: 1px solid #A34B4B;
+    color: #A34B4B;
+    background: transparent;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .remove-shop:hover { background: rgba(163,75,75,0.1); }
+
+  .note-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    padding: 12px 14px 14px;
+  }
+
+  .note-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .note-badge {
+    width: 100%;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 6px;
+    padding: 5px 0;
+    color: #1B1B1B;
+  }
+
+  .note-500 { background: #B7B2A6; }
+  .note-200 { background: #F2C238; }
+  .note-100 { background: #C6A8E8; }
+  .note-50  { background: #6FC1E8; }
+  .note-20  { background: #D8D24A; }
+  .note-10  { background: #C48A4F; }
+
+  .note-cell input[type="number"] {
+    width: 100%;
+    padding: 8px 6px;
+    font-size: 17px;
+    font-weight: 600;
+    border: 1px solid #D6C39A;
+    border-radius: 6px;
+    background: #FFFDF7;
+    color: #241812;
+    text-align: center;
+  }
+  .note-cell input[type="number"]:focus {
+    outline: none;
+    border-color: #B8901E;
+    box-shadow: 0 0 0 2px rgba(184,144,30,0.25);
+  }
+
+  .add-shop-btn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px dashed #F0B93A;
+    background: transparent;
+    color: #FBEFD9;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-shop-btn:hover { background: rgba(240,185,58,0.15); }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  button.util {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #F0B93A;
+    background: transparent;
+    color: #FBEFD9;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.util:hover { background: rgba(240,185,58,0.18); }
+
+  button.primary {
+    background: #F0B93A;
+    color: #2B1420;
+    font-weight: 700;
+    border-color: #F0B93A;
+  }
+  button.primary:hover { background: #F7CB61; }
+
+  .copied-msg {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    color: #FFF7E6;
+    background: #421F30;
+    border: 1px solid #6B3450;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    min-height: 18px;
+    white-space: pre-line;
+    line-height: 1.6;
+    display: none;
+  }
+  .copied-msg.show { display: block; }
+
+  @media (max-width: 560px) {
+    .note-grid { grid-template-columns: repeat(3, 1fr); }
+    header h1 { font-size: 28px; }
+    .grand-total .gt-amount { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Collection round-up</div>
+    <h1>Cash Counter</h1>
+    <p>Enter the note count for each shop — every shop total and the overall total update as you type.</p>
+  </header>
+
+  <div class="grand-card">
+    <div class="count-summary">Shops counted<br><strong id="shopCount">0</strong></div>
+    <div class="grand-total">
+      <div class="gt-label">Overall total</div>
+      <div class="gt-amount" id="grandTotal">₹0</div>
+    </div>
+  </div>
+
+  <div class="shop-list" id="shopList"></div>
+
+  <button class="add-shop-btn" id="addShopBtn">+ Add another shop</button>
+
+  <div class="actions">
+    <button class="util" id="resetBtn">Reset all</button>
+    <button class="util primary" id="copyBtn">Copy summary</button>
+  </div>
+  <div class="copied-msg" id="copiedMsg"></div>
+</div>
+
+<script>
+  const denominations = [500, 200, 100, 50, 20, 10];
+  const noteColors = {
+    500: '#B7B2A6', 200: '#F2C238', 100: '#C6A8E8',
+    50:  '#6FC1E8', 20:  '#D8D24A', 10:  '#C48A4F'
+  };
+
+  const shopListEl = document.getElementById('shopList');
+  let shopSeq = 0;
+
+  function noteIconSvg(value) {
+    const fill = noteColors[value];
+    return '<svg width="24" height="15" viewBox="0 0 30 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<rect x="0.5" y="0.5" width="29" height="17" rx="2.5" fill="' + fill + '" stroke="#2B2A22" stroke-opacity="0.35"/>' +
+      '<circle cx="8" cy="9" r="4" fill="none" stroke="#2B2A22" stroke-opacity="0.4"/>' +
+      '<line x1="15" y1="4" x2="27" y2="4" stroke="#2B2A22" stroke-opacity="0.25" stroke-width="1"/>' +
+      '<line x1="15" y1="9" x2="27" y2="9" stroke="#2B2A22" stroke-opacity="0.25" stroke-width="1"/>' +
+      '<line x1="15" y1="14" x2="27" y2="14" stroke="#2B2A22" stroke-opacity="0.25" stroke-width="1"/>' +
+      '</svg>';
+  }
+
+  function formatINR(n) {
+    return '₹' + Math.round(n).toLocaleString('en-IN');
+  }
+
+  function addShop(name) {
+    shopSeq += 1;
+    const id = shopSeq;
+    const card = document.createElement('div');
+    card.className = 'shop-card';
+    card.dataset.shopId = id;
+
+    let cells = '';
+    denominations.forEach(function(value) {
+      cells += '<div class="note-cell">' +
+        '<div class="note-badge note-' + value + '">₹' + value + '</div>' +
+        '<input type="number" min="0" step="1" inputmode="numeric" placeholder="0" data-denom="' + value + '">' +
+        '</div>';
+    });
+
+    card.innerHTML =
+      '<div class="shop-head">' +
+        '<input type="text" value="' + name + '" data-role="shop-name">' +
+        '<div class="shop-subtotal" data-role="shop-subtotal">₹0</div>' +
+        '<button class="remove-shop" data-role="remove" aria-label="Remove shop">×</button>' +
+      '</div>' +
+      '<div class="note-grid">' + cells + '</div>';
+
+    shopListEl.appendChild(card);
+
+    card.querySelectorAll('input[type="number"]').forEach(function(inp) {
+      inp.addEventListener('input', recalc);
+    });
+    card.querySelector('[data-role="shop-name"]').addEventListener('input', saveState);
+    card.querySelector('[data-role="remove"]').addEventListener('click', function() {
+      card.remove();
+      recalc();
+    });
+
+    return card;
+  }
+
+  function recalc() {
+    let grandTotal = 0;
+    const cards = shopListEl.querySelectorAll('.shop-card');
+    cards.forEach(function(card) {
+      let shopTotal = 0;
+      card.querySelectorAll('input[type="number"]').forEach(function(inp) {
+        const value = parseInt(inp.dataset.denom, 10);
+        let count = parseInt(inp.value, 10);
+        if (isNaN(count) || count < 0) count = 0;
+        shopTotal += count * value;
+      });
+      card.querySelector('[data-role="shop-subtotal"]').textContent = formatINR(shopTotal);
+      grandTotal += shopTotal;
+    });
+    document.getElementById('grandTotal').textContent = formatINR(grandTotal);
+    document.getElementById('shopCount').textContent = cards.length;
+    saveState();
+  }
+
+  function saveState() {
+    try {
+      const data = [];
+      shopListEl.querySelectorAll('.shop-card').forEach(function(card) {
+        const name = card.querySelector('[data-role="shop-name"]').value;
+        const counts = {};
+        card.querySelectorAll('input[type="number"]').forEach(function(inp) {
+          counts[inp.dataset.denom] = inp.value;
+        });
+        data.push({ name: name, counts: counts });
+      });
+      localStorage.setItem('cashCounterShops', JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem('cashCounterShops');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data) || data.length === 0) return false;
+      data.forEach(function(shop) {
+        const card = addShop(shop.name);
+        denominations.forEach(function(value) {
+          const inp = card.querySelector('input[data-denom="' + value + '"]');
+          if (inp && shop.counts && shop.counts[value]) inp.value = shop.counts[value];
+        });
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  document.getElementById('addShopBtn').addEventListener('click', function() {
+    addShop('Shop ' + (shopListEl.querySelectorAll('.shop-card').length + 1));
+    recalc();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    shopListEl.querySelectorAll('input').forEach(function(inp) {
+      if (inp.type === 'number') inp.value = '';
+    });
+    recalc();
+    document.getElementById('copiedMsg').textContent = '';
+    document.getElementById('copiedMsg').classList.remove('show');
+  });
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    let lines = ['Cash collection summary'];
+    let grandTotal = 0;
+    shopListEl.querySelectorAll('.shop-card').forEach(function(card) {
+      const shopName = card.querySelector('[data-role="shop-name"]').value || 'Shop';
+      let shopTotal = 0;
+      let parts = [];
+      card.querySelectorAll('input[type="number"]').forEach(function(inp) {
+        const value = parseInt(inp.dataset.denom, 10);
+        let count = parseInt(inp.value, 10);
+        if (isNaN(count) || count < 0) count = 0;
+        if (count > 0) parts.push(value + ' x ' + count);
+        shopTotal += count * value;
+      });
+      grandTotal += shopTotal;
+      lines.push(shopName + ': Rs ' + shopTotal.toLocaleString('en-IN') + (parts.length ? ' (' + parts.join(', ') + ')' : ''));
+    });
+    lines.push('');
+    lines.push('Overall total: Rs ' + grandTotal.toLocaleString('en-IN'));
+    const text = lines.join('\n');
+    const msg = document.getElementById('copiedMsg');
+    msg.classList.add('show');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        msg.textContent = 'Copied to clipboard:\n\n' + text;
+      }).catch(function() {
+        msg.textContent = text;
+      });
+    } else {
+      msg.textContent = text;
+    }
+  });
+
+  const restored = loadState();
+  if (!restored) {
+    for (let i = 1; i <= 10; i++) {
+      addShop('Shop ' + i);
+    }
+  }
+  recalc();
+</script>
+</body>
+</html>
